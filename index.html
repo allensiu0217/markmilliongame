@@ -3,115 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 知識富翁 - 馬可福音篇</title>
+    <title>馬可福音百萬富翁 - 經文挑戰版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
         
         :root {
             --gold: #d4af37;
-            --deep-blue: #0a0a2a;
-            --stage-blue: #1e3a8a;
+            --safety: #10b981;
+            --dark-bg: #0f172a;
         }
 
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background: radial-gradient(circle at center, #1a1a4a 0%, #050510 100%);
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
             color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             margin: 0;
             overflow-x: hidden;
+            user-select: none;
         }
 
+        /* 遊戲邊框特效 */
         .gold-border {
             border: 2px solid var(--gold);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(5px);
         }
 
+        /* 選項按鈕樣式 */
         .option-btn {
-            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
-            border: 1px solid var(--gold);
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
         .option-btn:hover:not(:disabled) {
-            background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+            background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+            border-color: var(--gold);
             transform: scale(1.02);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-        }
-
-        .option-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            z-index: 10;
         }
 
         .option-btn.correct {
-            background: linear-gradient(90deg, #059669 0%, #10b981 100%) !important;
-            animation: pulse 0.5s infinite alternate;
+            background: linear-gradient(145deg, #059669 0%, #047857 100%) !important;
+            border-color: #34d399 !important;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+            animation: pulse-green 1s infinite;
         }
 
         .option-btn.wrong {
-            background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%) !important;
+            background: linear-gradient(145deg, #dc2626 0%, #991b1b 100%) !important;
+            border-color: #f87171 !important;
         }
 
-        @keyframes pulse {
-            from { opacity: 1; }
-            to { opacity: 0.7; }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
+        /* 求助按鈕 */
         .lifeline-btn {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             border: 2px solid var(--gold);
-            background: #111;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.3s;
+            transition: all 0.3s;
+            font-weight: bold;
+            background: rgba(0,0,0,0.4);
+            font-size: 1.2rem;
         }
 
         .lifeline-btn:hover:not(.used) {
             background: var(--gold);
             color: black;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
         }
 
         .lifeline-btn.used {
-            border-color: #444;
-            color: #444;
+            opacity: 0.4;
+            border-color: #4b5563;
+            color: #6b7280;
             cursor: not-allowed;
+            position: relative;
+        }
+        
+        .lifeline-btn.used::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #ef4444;
+            transform: rotate(45deg);
         }
 
-        .prize-active {
-            background: var(--gold);
-            color: black;
-            font-weight: bold;
+        /* 獎金階梯樣式 */
+        .ladder-item {
+            transition: all 0.3s;
+            padding: 4px 12px;
             border-radius: 4px;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #94a3b8;
         }
 
-        .milestone {
+        .ladder-item.active {
+            background: linear-gradient(90deg, var(--gold), #b45309);
             color: white;
-            text-shadow: 0 0 5px var(--gold);
+            font-weight: bold;
+            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            border: 1px solid #fcd34d;
         }
 
-        #game-over-overlay {
-            display: none;
-            background: rgba(0,0,0,0.9);
-            z-index: 100;
+        /* 保險線顯眼樣式 */
+        .milestone-bar {
+            color: white !important;
+            border: 1px solid var(--safety);
+            background: rgba(16, 185, 129, 0.15);
+            position: relative;
+        }
+
+        .milestone-bar span:last-child {
+            color: var(--safety);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+        }
+
+        .milestone-bar::before {
+            content: "🛡️";
+            margin-right: 6px;
+            font-size: 0.8rem;
+        }
+
+        /* Modal 動畫 */
+        .modal-enter {
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <!-- 頂部狀態欄 -->
-    <header class="p-4 flex justify-between items-center bg-black/40 border-b border-gold/30">
-        <div>
-            <h1 class="text-xl font-bold tracking-widest text-gold">AI 知識富翁：馬可福音</h1>
+    <!-- 頂部導航 -->
+    <header class="p-4 flex justify-between items-center bg-black/40 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">📖</span>
+            <h1 class="text-xl font-bold tracking-widest text-gold italic hidden md:block">馬可福音百萬富翁</h1>
         </div>
         <div class="flex gap-4" id="lifelines">
             <button onclick="useLifeline('5050')" id="life-5050" class="lifeline-btn" title="50:50">50</button>
@@ -120,317 +176,382 @@
         </div>
     </header>
 
-    <main class="flex-grow flex flex-col md:flex-row p-4 gap-6 max-w-7xl mx-auto w-full">
-        <!-- 遊戲主區域 -->
-        <div class="flex-grow flex flex-col gap-6">
-            <!-- 獎金與主持人對話區 -->
-            <div class="bg-black/40 p-4 rounded-lg border border-white/10 min-h-[120px] flex items-center justify-center text-center">
-                <p id="host-message" class="text-lg italic text-blue-200">正在預備經文，請選手入座...</p>
-            </div>
-
-            <!-- 題目區 -->
-            <div id="question-container" class="hidden">
-                <div class="gold-border p-8 rounded-2xl bg-blue-900/20 text-center mb-8">
-                    <h2 id="question-text" class="text-2xl md:text-3xl font-bold leading-relaxed">題目加載中...</h2>
+    <main class="flex-grow flex flex-col lg:flex-row p-4 gap-6 max-w-7xl mx-auto w-full">
+        <!-- 左側：遊戲主區 -->
+        <div class="flex-grow flex flex-col justify-center relative">
+            
+            <!-- 開始畫面 -->
+            <div id="start-screen" class="text-center py-10 lg:py-20 flex flex-col items-center">
+                <div class="mb-8 relative inline-block">
+                    <h2 class="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-sm mb-2">MARK</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold text-white tracking-[0.2em]">MILLIONAIRE</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 w-full max-w-3xl">
+                    <div class="bg-slate-800/60 p-6 rounded-xl border border-white/10 hover:border-gold/50 transition-colors">
+                        <p class="text-gold font-bold text-lg mb-2">熱身階段</p>
+                        <p class="text-slate-300 text-sm">第 1-5 題</p>
+                        <p class="text-safety font-bold mt-2 text-sm">🛡️ 保險線: $8,000</p>
+                    </div>
+                    <div class="bg-slate-800/60 p-6 rounded-xl border border-white/10 hover:border-gold/50 transition-colors">
+                        <p class="text-gold font-bold text-lg mb-2">挑戰階段</p>
+                        <p class="text-slate-300 text-sm">第 6-10 題</p>
+                        <p class="text-safety font-bold mt-2 text-sm">🛡️ 保險線: $200,000</p>
+                    </div>
+                    <div class="bg-slate-800/60 p-6 rounded-xl border border-white/10 hover:border-gold/50 transition-colors">
+                        <p class="text-gold font-bold text-lg mb-2">巔峰階段</p>
+                        <p class="text-slate-300 text-sm">第 11-15 題</p>
+                        <p class="text-yellow-400 font-bold mt-2 text-sm">🏆 終點: $1,000,000</p>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button onclick="selectOption(0)" class="option-btn p-4 rounded-full text-left flex" id="opt-0">
-                        <span class="text-gold font-bold mr-4">A:</span> <span class="opt-text"></span>
-                    </button>
-                    <button onclick="selectOption(1)" class="option-btn p-4 rounded-full text-left flex" id="opt-1">
-                        <span class="text-gold font-bold mr-4">B:</span> <span class="opt-text"></span>
-                    </button>
-                    <button onclick="selectOption(2)" class="option-btn p-4 rounded-full text-left flex" id="opt-2">
-                        <span class="text-gold font-bold mr-4">C:</span> <span class="opt-text"></span>
-                    </button>
-                    <button onclick="selectOption(3)" class="option-btn p-4 rounded-full text-left flex" id="opt-3">
-                        <span class="text-gold font-bold mr-4">D:</span> <span class="opt-text"></span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 開始按鈕 -->
-            <div id="start-screen" class="flex flex-col items-center justify-center flex-grow py-20">
-                <div class="text-center mb-10">
-                    <h2 class="text-5xl font-bold mb-4 text-gold">馬可福音挑戰</h2>
-                    <p class="text-xl text-blue-100">深入查考聖經經文，贏取最高榮譽！</p>
-                </div>
-                <button onclick="startGame()" class="px-12 py-4 bg-gold text-black font-bold text-2xl rounded-full hover:bg-yellow-400 transition-all shadow-lg shadow-gold/20">
-                    開始挑戰
+                <button onclick="startGame()" class="group relative px-16 py-5 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold text-2xl rounded-full shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:shadow-[0_0_40px_rgba(234,179,8,0.7)] transition-all hover:-translate-y-1">
+                    <span class="relative z-10">開始挑戰</span>
+                    <div class="absolute inset-0 rounded-full bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </button>
             </div>
 
-            <!-- 控制區 -->
-            <div id="action-bar" class="hidden flex justify-between mt-auto pt-6 border-t border-white/10">
-                <button onclick="quitGame()" class="px-6 py-2 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition">攜帶獎金離開</button>
-                <div class="text-right">
-                    <p class="text-xs text-white/50 uppercase tracking-widest">當前獎金</p>
-                    <p id="current-prize-display" class="text-2xl font-bold text-gold">$0</p>
+            <!-- 答題畫面 -->
+            <div id="game-container" class="hidden w-full max-w-4xl mx-auto">
+                <!-- 題目框 -->
+                <div class="gold-border p-8 md:p-10 rounded-2xl text-center mb-8 relative bg-gradient-to-b from-slate-900 to-slate-950">
+                    <div class="absolute -top-5 left-1/2 -translate-x-1/2">
+                        <span id="level-badge" class="bg-gold text-black px-6 py-2 rounded-full font-bold shadow-lg text-sm tracking-wider">第 1 題</span>
+                    </div>
+                    
+                    <h2 id="question-text" class="text-2xl md:text-3xl font-bold leading-relaxed mt-4 mb-2 text-white">題目載入中...</h2>
+                    
+                    <!-- 經文出處顯示區 -->
+                    <div id="reference-container" class="h-8 mt-4 flex items-center justify-center">
+                        <p id="reference-text" class="text-safety font-bold italic text-lg opacity-0 transition-opacity duration-500"></p>
+                    </div>
+                </div>
+
+                <!-- 選項區 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" id="options-grid">
+                    <button onclick="selectOption(0)" class="option-btn p-5 rounded-xl text-left flex items-center group" id="opt-0">
+                        <span class="text-gold font-black mr-4 text-2xl w-8">A</span> 
+                        <span class="opt-text text-lg group-hover:text-white transition-colors text-slate-200"></span>
+                    </button>
+                    <button onclick="selectOption(1)" class="option-btn p-5 rounded-xl text-left flex items-center group" id="opt-1">
+                        <span class="text-gold font-black mr-4 text-2xl w-8">B</span> 
+                        <span class="opt-text text-lg group-hover:text-white transition-colors text-slate-200"></span>
+                    </button>
+                    <button onclick="selectOption(2)" class="option-btn p-5 rounded-xl text-left flex items-center group" id="opt-2">
+                        <span class="text-gold font-black mr-4 text-2xl w-8">C</span> 
+                        <span class="opt-text text-lg group-hover:text-white transition-colors text-slate-200"></span>
+                    </button>
+                    <button onclick="selectOption(3)" class="option-btn p-5 rounded-xl text-left flex items-center group" id="opt-3">
+                        <span class="text-gold font-black mr-4 text-2xl w-8">D</span> 
+                        <span class="opt-text text-lg group-hover:text-white transition-colors text-slate-200"></span>
+                    </button>
+                </div>
+
+                <!-- 底部資訊 -->
+                <div class="mt-8 flex justify-between items-end border-t border-white/5 pt-4">
+                    <button onclick="quitGame()" class="text-slate-400 hover:text-red-400 text-sm font-bold flex items-center gap-2 transition-colors px-3 py-2 rounded hover:bg-white/5">
+                        <span>🚪</span> 放棄挑戰 (帶走獎金)
+                    </button>
+                    <div class="text-right">
+                        <p class="text-xs text-gold uppercase tracking-widest mb-1">當前獎金</p>
+                        <p id="current-prize-display" class="text-4xl font-black text-white tracking-tight text-shadow-gold">$0</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 獎金階梯 -->
-        <div class="w-full md:w-64 bg-black/50 p-4 rounded-xl border border-gold/30">
-            <h3 class="text-center text-gold mb-4 font-bold border-b border-gold/30 pb-2">獎金階梯</h3>
-            <div id="prize-ladder" class="flex flex-col-reverse gap-1 text-sm">
-                <!-- 由 JS 填充 -->
+        <!-- 右側：獎金階梯 -->
+        <div class="w-full lg:w-80 bg-slate-900/80 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-2xl h-fit">
+            <h3 class="text-center text-slate-400 mb-4 font-bold tracking-[0.2em] text-xs uppercase border-b border-white/5 pb-2">獎金階梯</h3>
+            <div id="prize-ladder" class="flex flex-col-reverse gap-1">
+                <!-- JS 自動填充 -->
             </div>
         </div>
     </main>
 
-    <!-- 結算彈窗 -->
-    <div id="game-over-overlay" class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-blue-950 border-2 border-gold p-8 rounded-3xl max-w-md w-full text-center shadow-2xl">
-            <h2 id="over-title" class="text-4xl font-bold text-gold mb-4">遊戲結束</h2>
-            <p id="over-message" class="text-xl mb-6">查考經文，必有收穫！</p>
-            <div class="bg-black/40 p-4 rounded-xl mb-6">
-                <p class="text-sm text-gray-400">獲得獎金</p>
-                <p id="final-prize" class="text-3xl font-bold text-white">$0</p>
+    <!-- 彈窗 (求助/結束) -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/90 items-center justify-center p-4 z-[100] hidden backdrop-blur-sm">
+        <div id="modal-box" class="bg-slate-900 border border-gold p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] modal-enter relative overflow-hidden">
+            <!-- 裝飾背景 -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
+            
+            <h2 id="modal-title" class="text-3xl font-black text-gold mb-4"></h2>
+            <div id="modal-content" class="text-lg text-slate-200 mb-8 leading-relaxed"></div>
+            
+            <div id="game-over-stats" class="hidden bg-white/5 p-4 rounded-lg mb-6 border border-white/10">
+                <p class="text-sm text-slate-400 uppercase mb-1">最終獲得</p>
+                <p id="modal-prize" class="text-4xl font-black text-white tracking-wide">$0</p>
             </div>
-            <button onclick="location.reload()" class="w-full py-3 bg-gold text-black font-bold rounded-full hover:bg-yellow-400 transition">再次挑戰</button>
-        </div>
-    </div>
 
-    <!-- 模擬 Modal (用於救命工具) -->
-    <div id="lifeline-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[200]">
-        <div class="bg-blue-900 border border-gold p-6 rounded-2xl max-w-sm w-full text-center">
-            <h3 id="modal-title" class="text-xl font-bold mb-4 text-gold">救命工具</h3>
-            <div id="modal-content" class="text-lg mb-6 leading-relaxed">內容</div>
-            <button onclick="closeModal()" class="px-8 py-2 bg-white text-blue-900 font-bold rounded-full">了解</button>
+            <button onclick="closeModal()" id="modal-btn" class="w-full py-3 bg-gold text-black font-bold text-lg rounded-lg hover:bg-yellow-400 transition-colors">
+                確認
+            </button>
         </div>
     </div>
 
     <script>
+        // 獎金結構設定 (15階)
         const prizes = [
-            1000, 2000, 4000, 8000, 16000, 
-            32000, 64000, 125000, 250000, 512000,
-            1024000, 2048000, 4096000, 8192000, 16000000
+            1000, 2000, 4000, 6000, 8000,          // Q1-5 (保險線: 8000)
+            10000, 20000, 50000, 100000, 200000,   // Q6-10 (保險線: 200000)
+            250000, 400000, 600000, 800000, 1000000 // Q11-15
         ];
-
-        // 馬可福音題庫
+        
+        // 題庫 (簡單 / 中等 / 困難)
         const masterQuestions = {
             easy: [
-                { q: "《馬可福音》的第一句話提到，這是誰的福音的起頭？", a: ["摩西", "耶穌基督", "大衛", "施洗約翰"], c: 1 },
-                { q: "在曠野喊著說「預備主的道」的人是誰？", a: ["彼得", "安得烈", "施洗約翰", "雅各"], c: 2 },
-                { q: "耶穌在曠野受試探多少天？", a: ["7天", "12天", "40天", "100天"], c: 2 },
-                { q: "耶穌呼召彼得和安得烈時，他們正在做什麼？", a: ["稅關坐著", "撒網捕魚", "補網", "祈禱"], c: 1 },
-                { q: "耶穌醫治了彼得哪位親屬的熱病？", a: ["母親", "妻子", "岳母", "女兒"], c: 2 },
-                { q: "耶穌在馬可福音中，稱哪十二個人為「使徒」？", a: ["法利賽人", "門徒中選出的12人", "文士", "撒都該人"], c: 1 },
-                { q: "耶穌平靜風浪後，門徒彼此說：這到底是誰，連風和什麼也聽從他了？", a: ["山", "樹", "海", "人"], c: 2 }
+                { q: "耶穌受洗後，聖靈降在他身上形狀彷彿什麼？", r: "馬可福音 1:10", a: ["火焰", "鴿子", "雲彩", "風"], c: 1 },
+                { q: "耶穌呼召西門和安得烈時說：我要叫你們為人成什麼？", r: "馬可福音 1:17", a: ["漁夫", "木匠", "得人的漁夫", "使徒"], c: 2 },
+                { q: "施洗約翰在曠野穿的是什麼衣服？", r: "馬可福音 1:6", a: ["細麻布", "駱駝毛", "羊皮", "絲綢"], c: 1 },
+                { q: "在迦百農，幾個人抬著癱子去見耶穌？", r: "馬可福音 2:3", a: ["2人", "4人", "6人", "8人"], c: 1 },
+                { q: "耶穌平靜風浪後，門徒彼此說：這到底是誰，連風和什麼也聽從他了？", r: "馬可福音 4:41", a: ["海", "山", "雨", "雷"], c: 0 },
+                { q: "撒種的比喻中，撒在路旁的代表什麼被奪去？", r: "馬可福音 4:15", a: ["錢財", "道", "種子", "信心"], c: 1 },
+                { q: "有一個患血漏的婦人，病了多少年？", r: "馬可福音 5:25", a: ["10年", "12年", "18年", "38年"], c: 1 }
             ],
             medium: [
-                { q: "有一個患血漏的女人，她患了這病多少年？", a: ["7年", "10年", "12年", "38年"], c: 2 },
-                { q: "耶穌讓睚魯的女兒復活時，對她說了什麼話？", a: ["拉波尼", "大利大古米", "以法大", "以利以利拉馬撒巴各大尼"], c: 1 },
-                { q: "耶穌用多少個餅和幾條魚餵飽了五千人？", a: ["五餅二魚", "七餅二魚", "十餅五魚", "十二餅三魚"], c: 0 },
-                { q: "在變像山上，哪兩個人出現在耶穌身邊？", a: ["亞伯拉罕和摩西", "摩西和以利亞", "大衛和所羅門", "以諾和挪亞"], c: 1 },
-                { q: "耶穌曾治好一個耳聾舌結的人，對他說「以法大」，這是什麼意思？", a: ["平安了", "開了吧", "起來吧", "神與你同在"], c: 1 },
-                { q: "耶穌說：「駱駝穿過什麼的眼，比財主進神的國還容易呢？」", a: ["針", "城門", "繩子", "窗戶"], c: 0 },
-                { q: "耶穌進入耶路撒冷時，是騎著什麼進去的？", a: ["馬", "駱駝", "驢駒", "車"], c: 2 }
+                { q: "耶穌對管會堂的說：「不要怕，只要...」？", r: "馬可福音 5:36", a: ["信", "禱告", "看", "悔改"], c: 0 },
+                { q: "「大利大古米」翻出來的意思是什麼？", r: "馬可福音 5:41", a: ["閨女，我吩咐妳起來", "神與妳同在", "平安了", "開了吧"], c: 0 },
+                { q: "耶穌問門徒：人說我是誰？彼得回答說：你是...？", r: "馬可福音 8:29", a: ["先知", "基督", "以利亞", "人子"], c: 1 },
+                { q: "耶穌登山變像時，哪兩位顯現與耶穌說話？", r: "馬可福音 9:4", a: ["摩西、亞伯拉罕", "以利亞、摩西", "大衛、以賽亞", "以諾、以利亞"], c: 1 },
+                { q: "耶穌說：讓小孩子到我這裡來，因為在神國的，正是...？", r: "馬可福音 10:14", a: ["這樣的人", "誠實的人", "謙卑的人", "受苦的人"], c: 0 },
+                { q: "耶穌騎驢進耶路撒冷時，眾人喊著說什麼？", r: "馬可福音 11:9", a: ["阿們", "和散那", "哈利路亞", "以馬內利"], c: 1 },
+                { q: "最大的誡命第一是盡心愛神，第二是什麼？", r: "馬可福音 12:31", a: ["愛人如己", "孝敬父母", "不可殺人", "遵守安息日"], c: 0 }
             ],
             hard: [
-                { q: "馬可福音中，哪一個門徒在耶穌受審時三次不認主？", a: ["約翰", "猶大", "雅各", "彼得"], c: 3 },
-                { q: "在客西馬尼園，耶穌祈禱時稱呼神為什麼？", a: ["耶和華", "阿爸、父", "主啊", "萬軍之主"], c: 1 },
-                { q: "耶穌在十字架上，約在什麼時候大聲喊叫「我的神，我的神，為什麼離棄我？」", a: ["巳初", "午正", "申初", "酉時"], c: 2 },
-                { q: "馬可福音記載，耶穌死後，誰去向彼拉多求耶穌的身體？", a: ["尼哥底母", "抹大拉的馬利亞", "亞利馬太的約瑟", "彼得"], c: 2 },
-                { q: "耶穌說：「人子來，不是要受人的伺候，乃是要伺候人，並且要捨命作多人的什麼？」", a: ["中保", "贖價", "君王", "祭物"], c: 1 },
-                { q: "耶穌在聖殿裡看著眾人投錢，稱讚一個寡婦投了多少錢？", a: ["一個大錢", "兩個小錢", "十個銀幣", "一袋金子"], c: 1 },
-                { q: "耶穌被釘十字架時，有一個百夫長說「這人真是神的兒子」，他當時在哪裡？", a: ["十字架下面對耶穌站著", "官府裡", "聖殿中", "城牆上"], c: 0 }
+                { q: "耶穌在客西馬尼禱告說：「阿爸！父啊！在你凡事都能，求你將這...撤去」？", r: "馬可福音 14:36", a: ["苦難", "杯", "重擔", "時刻"], c: 1 },
+                { q: "耶穌受難時，從什麼時候到申初遍地都黑暗了？", r: "馬可福音 15:33", a: ["巳初", "午正", "未時", "卯時"], c: 1 },
+                { q: "「以利！以利！拉馬撒巴各大尼」是什麼意思？", r: "馬可福音 15:34", a: ["成了", "父啊赦免他們", "我的神為什麼離棄我", "我將靈魂交在你手裡"], c: 2 },
+                { q: "是誰去向彼拉多求耶穌的身體安葬？", r: "馬可福音 15:43", a: ["尼哥底母", "亞利馬太的約瑟", "古利奈人西門", "抹大拉的馬利亞"], c: 1 },
+                { q: "耶穌復活後，首先向誰顯現？", r: "馬可福音 16:9", a: ["彼得", "抹大拉的馬利亞", "雅各", "以馬忤斯的門徒"], c: 1 },
+                { q: "耶穌受試探時，與什麼同在一處？", r: "馬可福音 1:13", a: ["野獸", "魔鬼", "強盜", "痲瘋病人"], c: 0 },
+                { q: "有一個少年人赤身逃走，這記載在哪一章？", r: "馬可福音 14:51", a: ["第13章", "第14章", "第15章", "第16章"], c: 1 }
             ]
         };
 
-        let questionsPool = []; // 存放本次遊戲隨機出的15題
         let currentLevel = 0;
+        let questionsPool = [];
         let lifelines = { '5050': true, 'phone': true, 'audience': true };
         let isLocked = false;
+        let isGameOver = false;
 
-        const hostMessages = [
-            "歡迎來到《馬可福音》專場！願聖靈開啟我們的智慧，讓我們開始第一題。",
-            "很好，這只是起頭，讓我們繼續查考。",
-            "聖經說，尋找的就尋見。你現在正走在正確的道路上。",
-            "獎金正在增加，對經文的理解也越來越深。",
-            "這是第一道安全網，贏下它，你就擁有了 $16,000 的見證！",
-            "第一階段完成！現在難度會稍微提升，你預備好了嗎？",
-            "中等難度的考驗，這需要你對細節有更多的留意。",
-            "沒錯！神的話語是我們腳前的燈，路上的光。",
-            "觀眾們都在屏息以待，你是否能進入前十名的行列？",
-            "這是價值 $512,000 的關鍵題，答對它，安全網就會鎖定！",
-            "奇蹟發生了！你進入了巔峰挑戰賽。剩下的題目將考驗你查經的深度。",
-            "這是百萬級別的對話，每一個字都要仔細推敲。",
-            "非常冷僻的經文細節...你是否要尋求救助？",
-            "倒數第二題！你已經快要完成這場屬靈的壯舉了。",
-            "最後一關。女士們先生們，今晚，我們能見證一位《馬可福音》大師的誕生嗎？"
-        ];
-
-        // 隨機選題不重複邏輯
-        function prepareQuestions() {
-            const selected = [];
-            const helper = (list, count) => {
-                const copy = [...list];
-                for(let i=0; i<count; i++) {
-                    const idx = Math.floor(Math.random() * copy.length);
-                    selected.push(copy.splice(idx, 1)[0]);
-                }
-            };
-            helper(masterQuestions.easy, 5);
-            helper(masterQuestions.medium, 5);
-            helper(masterQuestions.hard, 5);
-            return selected;
-        }
-
-        // 初始化獎金階梯 UI
-        function initLadder() {
+        // 初始化階梯
+        function initPrizeLadder() {
             const ladder = document.getElementById('prize-ladder');
-            ladder.innerHTML = ''; // 清空
-            prizes.forEach((amount, index) => {
+            ladder.innerHTML = '';
+            
+            prizes.forEach((p, i) => {
                 const div = document.createElement('div');
-                div.id = `prize-step-${index}`;
-                div.className = "flex justify-between px-3 py-1 border border-white/5 transition-all";
-                if (index === 4 || index === 9 || index === 14) div.classList.add('milestone');
-                div.innerHTML = `<span>${index + 1}</span> <span>$${amount.toLocaleString()}</span>`;
+                div.id = `ladder-${i}`;
+                div.className = "ladder-item";
+                
+                // 設定保險線樣式
+                let safetyBadge = "";
+                let isMilestone = false;
+                
+                if (i === 4 || i === 9) {
+                    div.classList.add('milestone-bar');
+                    isMilestone = true;
+                }
+                
+                // 格式化數字
+                const prizeText = p.toLocaleString();
+                
+                div.innerHTML = `
+                    <span class="font-mono ${isMilestone ? 'text-white' : 'text-slate-500'} w-6">${i + 1}</span>
+                    <span class="font-bold flex-grow text-right tracking-wide">$${prizeText}</span>
+                `;
                 ladder.appendChild(div);
             });
         }
 
+        // 開始遊戲
         function startGame() {
-            questionsPool = prepareQuestions(); // 本次遊戲題目隨機化
+            // 洗牌並選題 (每階段5題)
+            const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5).slice(0, 5);
+            questionsPool = [
+                ...shuffle(masterQuestions.easy),
+                ...shuffle(masterQuestions.medium),
+                ...shuffle(masterQuestions.hard)
+            ];
+            
+            currentLevel = 0;
+            isLocked = false;
+            isGameOver = false;
+            
+            // 重置 UI
             document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('question-container').classList.remove('hidden');
-            document.getElementById('action-bar').classList.remove('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.querySelectorAll('.lifeline-btn').forEach(btn => btn.classList.remove('used'));
+            lifelines = { '5050': true, 'phone': true, 'audience': true };
+            
             loadQuestion();
         }
 
+        // 載入題目
         function loadQuestion() {
-            isLocked = false;
-            const qData = questionsPool[currentLevel];
+            const q = questionsPool[currentLevel];
             
-            // 更新 UI
-            document.getElementById('host-message').innerText = hostMessages[currentLevel];
-            document.getElementById('question-text').innerText = qData.q;
+            // 更新題目文字
+            document.getElementById('level-badge').innerText = `第 ${currentLevel + 1} / 15 題`;
+            document.getElementById('question-text').innerText = q.q;
             
-            const options = document.querySelectorAll('.option-btn');
-            options.forEach((btn, i) => {
-                btn.classList.remove('correct', 'wrong', 'hidden');
-                btn.querySelector('.opt-text').innerText = qData.a[i];
+            // 隱藏並重置經文出處
+            const refText = document.getElementById('reference-text');
+            refText.style.opacity = '0';
+            refText.innerText = "";
+            
+            // 更新選項
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, i) => {
+                btn.className = "option-btn p-5 rounded-xl text-left flex items-center group"; // 重置 class
                 btn.style.opacity = "1";
+                btn.disabled = false;
+                btn.querySelector('.opt-text').innerText = q.a[i];
             });
 
             // 更新階梯高亮
-            document.querySelectorAll('#prize-ladder div').forEach(d => d.classList.remove('prize-active'));
-            document.getElementById(`prize-step-${currentLevel}`).classList.add('prize-active');
+            document.querySelectorAll('.ladder-item').forEach(d => d.classList.remove('active'));
+            const currentStep = document.getElementById(`ladder-${currentLevel}`);
+            if(currentStep) {
+                currentStep.classList.add('active');
+                currentStep.scrollIntoView({behavior: "smooth", block: "center"});
+            }
             
-            // 更新獎金顯示
-            document.getElementById('current-prize-display').innerText = `$${(currentLevel > 0 ? prizes[currentLevel-1] : 0).toLocaleString()}`;
+            // 更新目前獎金 (顯示上一題的獎金，如果第一題則顯示0)
+            const currentPrize = currentLevel > 0 ? prizes[currentLevel-1] : 0;
+            document.getElementById('current-prize-display').innerText = `$${currentPrize.toLocaleString()}`;
+            
+            isLocked = false;
         }
 
-        function selectOption(index) {
+        // 選擇答案
+        function selectOption(idx) {
             if (isLocked) return;
             isLocked = true;
             
-            const correctIndex = questionsPool[currentLevel].c;
-            const selectedBtn = document.getElementById(`opt-${index}`);
+            const q = questionsPool[currentLevel];
+            const btn = document.getElementById(`opt-${idx}`);
+            const correctBtn = document.getElementById(`opt-${q.c}`);
             
-            document.getElementById('host-message').innerText = "最後答案...？";
-            
-            setTimeout(() => {
-                if (index === correctIndex) {
-                    selectedBtn.classList.add('correct');
-                    document.getElementById('host-message').innerText = `正確！你對經文的認識令人讚嘆。`;
-                    
-                    setTimeout(() => {
-                        currentLevel++;
-                        if (currentLevel >= 15) {
-                            showEndGame(true);
-                        } else {
-                            loadQuestion();
-                        }
-                    }, 2000);
-                } else {
-                    selectedBtn.classList.add('wrong');
-                    document.getElementById(`opt-${correctIndex}`).classList.add('correct');
-                    document.getElementById('host-message').innerText = "很遺憾，建議可以再多翻閱馬可福音...";
-                    setTimeout(() => showEndGame(false), 2000);
-                }
-            }, 1200);
+            // 顯示經文出處
+            const refText = document.getElementById('reference-text');
+            refText.innerText = `📖 ${q.r}`;
+            refText.style.opacity = '1';
+
+            if (idx === q.c) {
+                // 答對
+                btn.classList.add('correct');
+                playSound('correct');
+                
+                setTimeout(() => {
+                    currentLevel++;
+                    if (currentLevel >= 15) {
+                        endGame(true);
+                    } else {
+                        loadQuestion();
+                    }
+                }, 2500); // 延長時間讓玩家看經文
+            } else {
+                // 答錯
+                btn.classList.add('wrong');
+                correctBtn.classList.add('correct');
+                playSound('wrong');
+                setTimeout(() => endGame(false), 3000);
+            }
         }
 
+        // 結束遊戲
+        function endGame(isWin) {
+            isGameOver = true;
+            let finalPrize = 0;
+            let title = "";
+            let msg = "";
+            
+            if (isWin) {
+                finalPrize = 1000000;
+                title = "🎉 挑戰成功！";
+                msg = "哈利路亞！你已經精通馬可福音，獲得了最高榮譽！";
+            } else {
+                // 計算保險金
+                if (currentLevel >= 10) finalPrize = 200000;
+                else if (currentLevel >= 5) finalPrize = 8000;
+                else finalPrize = 0;
+                
+                title = "挑戰結束";
+                msg = `很可惜，但在神的話語中沒有失敗。`;
+            }
+            
+            showModal(title, msg, finalPrize, true);
+        }
+
+        // 放棄遊戲
+        function quitGame() {
+            if (isLocked) return;
+            const finalPrize = currentLevel > 0 ? prizes[currentLevel-1] : 0;
+            showModal("💰 帶著獎金離開", "明智的選擇！有些時候，知足也是一種智慧。", finalPrize, true);
+        }
+
+        // 求助功能
         function useLifeline(type) {
-            if (!lifelines[type] || isLocked || currentLevel === 14) return;
+            if (!lifelines[type] || isLocked) return;
             
             lifelines[type] = false;
             document.getElementById(`life-${type}`).classList.add('used');
             
-            const correctIndex = questionsPool[currentLevel].c;
-
+            const q = questionsPool[currentLevel];
+            const correctLetter = ["A", "B", "C", "D"][q.c];
+            
             if (type === '5050') {
-                let indices = [0, 1, 2, 3].filter(i => i !== correctIndex);
-                indices.sort(() => Math.random() - 0.5);
-                indices.slice(0, 2).forEach(idx => {
-                    document.getElementById(`opt-${idx}`).classList.add('hidden');
+                // 刪去兩個錯誤答案
+                let wrongIndices = [0,1,2,3].filter(i => i !== q.c);
+                wrongIndices.sort(() => Math.random() - 0.5);
+                wrongIndices.slice(0, 2).forEach(i => {
+                    document.getElementById(`opt-${i}`).style.opacity = "0.2";
+                    document.getElementById(`opt-${i}`).disabled = true;
                 });
-                showModal("50:50 已使用", "我們為你除去了兩個干擾的選項。");
-            } 
-            else if (type === 'phone') {
-                const isCorrect = Math.random() < 0.8;
-                const answer = isCorrect ? questionsPool[currentLevel].a[correctIndex] : questionsPool[currentLevel].a[(correctIndex+1)%4];
-                showModal("諮詢經學專家", `專家說：「根據馬可福音的記載，我很有信心答案應該是 <b>${answer}</b>。」`);
-            } 
-            else if (type === 'audience') {
-                let votes = [0, 0, 0, 0];
-                let remaining = 100;
-                const weight = [15, 30, 45, 70][Math.min(currentLevel/4 | 0, 3)]; 
-                votes[correctIndex] = Math.floor(Math.random() * (100 - weight)) + weight;
-                remaining -= votes[correctIndex];
-                for(let i=0; i<3; i++) {
-                    let idx = (correctIndex + 1 + i) % 4;
-                    let v = Math.floor(Math.random() * remaining);
-                    votes[idx] = v;
-                    remaining -= v;
-                }
-                votes[(correctIndex + 3) % 4] += remaining;
-                let pollText = votes.map((v, i) => `${String.fromCharCode(65+i)}: ${v}%`).join("<br>");
-                showModal("肢體們的建議", `會眾投票結果如下：<br><br>${pollText}`);
+            } else if (type === 'phone') {
+                showModal("📞 牧師連線中...", `牧師思考了一下說：<br>「這段經文我講道時提過，在 <b>${q.r}</b>。<br>我有九成把握答案是 <b>${correctLetter}</b>。」`);
+            } else if (type === 'audience') {
+                showModal("👥 觀眾投票結果", `現場觀眾翻閱聖經後的統計：<br><br>A: ${q.c===0?75:10}%<br>B: ${q.c===1?75:10}%<br>C: ${q.c===2?75:10}%<br>D: ${q.c===3?75:10}%<br><br>大部份人認為答案是 <b>${correctLetter}</b>`);
             }
         }
 
-        function quitGame() {
-            if (isLocked) return;
-            const currentPrize = currentLevel > 0 ? prizes[currentLevel-1] : 0;
-            showEndGame(false, currentPrize, "平安離去。你在神的話語上已經大有長進！");
-        }
-
-        function showEndGame(win, forcePrize = null, customMsg = null) {
-            document.getElementById('game-over-overlay').style.display = 'flex';
-            let finalPrize = 0;
-            if (win) {
-                finalPrize = 16000000;
-                document.getElementById('over-title').innerText = "屬靈大師誕生！";
-                document.getElementById('over-message').innerText = "哈利路亞！你已經完全掌握了馬可福音。";
-            } else if (forcePrize !== null) {
-                finalPrize = forcePrize;
-                document.getElementById('over-title').innerText = "挑戰結束";
-                document.getElementById('over-message').innerText = customMsg;
-            } else {
-                if (currentLevel >= 10) finalPrize = 512000;
-                else if (currentLevel >= 5) finalPrize = 16000;
-                document.getElementById('over-title').innerText = "再接再厲";
-                document.getElementById('over-message').innerText = "經文查考尚未成功，門徒仍須努力！";
-            }
-            document.getElementById('final-prize').innerText = `$${finalPrize.toLocaleString()}`;
-        }
-
-        function showModal(title, content) {
+        // 顯示 Modal
+        function showModal(title, content, prize = null, isEnd = false) {
+            const modal = document.getElementById('modal-overlay');
+            const stats = document.getElementById('game-over-stats');
+            const btn = document.getElementById('modal-btn');
+            
             document.getElementById('modal-title').innerHTML = title;
             document.getElementById('modal-content').innerHTML = content;
-            document.getElementById('lifeline-modal').classList.remove('hidden');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            if (prize !== null) {
+                stats.classList.remove('hidden');
+                document.getElementById('modal-prize').innerText = `$${prize.toLocaleString()}`;
+                btn.innerText = "重新開始";
+                btn.onclick = () => location.reload();
+            } else {
+                stats.classList.add('hidden');
+                btn.innerText = "回到遊戲";
+                btn.onclick = closeModal;
+            }
         }
 
         function closeModal() {
-            document.getElementById('lifeline-modal').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.remove('flex');
         }
 
-        window.onload = initLadder;
+        // 簡易音效模擬 (不使用外部檔案)
+        function playSound(type) {
+            // 這裡可以加入 Audio API，但在單一文件中保持簡單
+        }
+
+        // 啟動初始化
+        initPrizeLadder();
     </script>
 </body>
 </html>
